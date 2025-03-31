@@ -1,0 +1,14 @@
+{% include 'myjobs/header.html' %}
+    
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px - 40px);">
+    <div class="justify-content-center">
+        <h2 class="text-center mb-4">Search Job</h2>
+        <div class="input-group" style="max-width: 600px; width: 100%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <input type="text" class="form-control form-control-lg" placeholder="Job title, keyword, or company" aria-label="Job title, keyword, or company" style="padding-right: 10px; font-size: 1.25rem; height: 3.5rem;">
+            <input type="text" class="form-control form-control-lg" placeholder="City, state, zipcode, or remote" aria-label="City, state, zipcode, or remote" style="padding-right: 10px; font-size: 1.25rem; height: 3.5rem;">
+            <button class="btn btn-primary btn-lg" type="button">Search</button>
+        </div>
+    </div>
+</div>
+{% include 'myjobs/footer.html' %}
+

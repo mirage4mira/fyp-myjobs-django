@@ -1,0 +1,71 @@
+{% include 'myjobs/header.html' %}
+<div class="container" style="margin-top: 50px; margin-bottom: 50px;">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Create a Job</h2>
+            <form method="POST" action="/employer/create-job">
+                <div class="mb-3">
+                    <label for="job_title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" id="job_title" name="job_title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="job_description" class="form-label">Job Description</label>
+                    <textarea class="form-control" id="job_description" name="job_description" rows="5" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="job_location" class="form-label">Job Location</label>
+                    <input type="text" class="form-control" id="job_location" name="job_location" required>
+                </div>
+                <div class="mb-3">
+                    <label for="job_salary" class="form-label">Salary</label>
+                    <input type="number" class="form-control" id="job_salary" name="job_salary" required>
+                </div>
+                <div class="mb-3">
+                    <label for="num_candidates" class="form-label">Number of Candidates</label>
+                    <input type="number" class="form-control" id="num_candidates" name="num_candidates" required>
+                </div>
+                <div class="mb-3">
+                    <label for="required_education" class="form-label">Required Education</label>
+                    <input type="text" class="form-control" id="required_education" name="required_education">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="education_mandatory" name="education_mandatory">
+                        <label class="form-check-label" for="education_mandatory">Mandatory</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="required_experience" class="form-label">Required Experience (in years)</label>
+                    <input type="number" class="form-control" id="required_experience" name="required_experience">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="experience_mandatory" name="experience_mandatory">
+                        <label class="form-check-label" for="experience_mandatory">Mandatory</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Post Job</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Track Job Applications</h2>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Applications</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example row -->
+                    <tr>
+                        <td>Software Engineer</td>
+                        <td>15</td>
+                        <td>
+                            <a href="/employer/view-applications/1" class="btn btn-sm btn-primary">View</a>
+                        </td>
+                    </tr>
+                    <!-- Add dynamic rows here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% include 'myjobs/footer.html' %}

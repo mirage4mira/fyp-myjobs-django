@@ -1,0 +1,149 @@
+{% include 'myjobs/header.html' %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px - 40px); margin-top: 20px; margin-bottom: 20px;">
+    <form method="POST" action="{% url 'setup_profile' %}" style="max-width: 400px; width: 100%;">
+        {% csrf_token %}
+        <h2 class="text-center mb-4">Setup Profile</h2>
+        <div class="mb-3">
+            <label for="home_location" class="form-label">Home Location</label>
+            <input list="home_locations" class="form-control" id="home_location" name="home_location" placeholder="Enter or select your home city">
+            <datalist id="home_locations">
+                <option value="Kuala Lumpur">
+                <option value="George Town">
+                <option value="Ipoh">
+                <option value="Shah Alam">
+                <option value="Petaling Jaya">
+                <option value="Johor Bahru">
+                <option value="Malacca City">
+                <option value="Alor Setar">
+                <option value="Kota Bharu">
+                <option value="Kuala Terengganu">
+                <option value="Kuantan">
+                <option value="Seremban">
+                <option value="Kuching">
+                <option value="Miri">
+                <option value="Kota Kinabalu">
+                <option value="Sandakan">
+                <option value="Tawau">
+            </datalist>
+        </div>
+        
+        <div id="job-experience-section">
+            <h4 class="mb-3">Job Experience</h4>
+            <div class="job-experience mb-3">
+                <div class="mb-3">
+                    <label for="job_title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" id="job_title" name="job_title[]" placeholder="Enter your job title">
+                </div>
+                <div class="mb-3">
+                    <label for="company_name" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" id="company_name" name="company_name[]" placeholder="Enter your company name">
+                </div>
+                <div class="mb-3">
+                    <label for="date_started" class="form-label">Date Started</label>
+                    <input type="month" class="form-control" id="date_started" name="date_started[]">
+                </div>
+                <div class="mb-3">
+                    <label for="date_ended" class="form-label">Date Ended</label>
+                    <input type="month" class="form-control" id="date_ended" name="date_ended[]">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm remove-job-experience">Remove</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" id="add-job-experience">Add Job Experience</button>
+
+        <div class="mb-3">
+            <label for="preferred_job_classification" class="form-label">Preferred Job Classification</label>
+            <select class="form-control" id="preferred_job_classification" name="preferred_job_classification">
+                <option value="" disabled selected>Select your preferred job classification</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Data & Analytics">Data & Analytics</option>
+                <option value="Product Management">Product Management</option>
+                <option value="Design">Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Customer Support">Customer Support</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="education" class="form-label">Education</label>
+            <select class="form-control" id="education" name="education">
+                <option value="" disabled selected>Select your education level</option>
+                <option value="High School Diploma">High School Diploma</option>
+                <option value="Associate Degree">Associate Degree</option>
+                <option value="Bachelor's Degree">Bachelor's Degree</option>
+                <option value="Master's Degree">Master's Degree</option>
+                <option value="Doctorate">Doctorate</option>
+                <option value="Professional Certification">Professional Certification</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="skill_language" class="form-label">Skill</label>
+            <select class="form-control" id="skill_language" name="skill_language[]" multiple>
+                <option value="Programming">Programming</option>
+                <option value="Data Analysis">Data Analysis</option>
+                <option value="Project Management">Project Management</option>
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="Digital Marketing">Digital Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="Customer Service">Customer Service</option>
+                <option value="Content Writing">Content Writing</option>
+                <option value="Public Speaking">Public Speaking</option>
+                <option value="Problem Solving">Problem Solving</option>
+            </select>
+            <small class="form-text text-muted">Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
+        </div>
+        <div class="mb-3">
+            <label for="language" class="form-label">Language</label>
+            <div id="language-section">
+                <div class="language-entry mb-3">
+                    <select class="form-control mb-2" id="language" name="language[]">
+                        <option value="" disabled selected>Select a language</option>
+                        <option value="English">English</option>
+                        <option value="Mandarin">Mandarin</option>
+                        <option value="Malay">Malay</option>
+                        <option value="Tamil">Tamil</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Korean">Korean</option>
+                        <option value="Arabic">Arabic</option>
+                    </select>
+                    <select class="form-control" name="proficiency[]">
+                        <option value="" disabled selected>Select proficiency</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Native">Native</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="add-language">Add Language</button>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Save Profile</button>
+    </form>
+</div>
+<script>
+    document.getElementById('add-job-experience').addEventListener('click', function () {
+        const jobExperienceSection = document.getElementById('job-experience-section');
+        const newJobExperience = document.querySelector('.job-experience').cloneNode(true);
+        newJobExperience.querySelectorAll('input').forEach(input => input.value = '');
+        jobExperienceSection.appendChild(newJobExperience);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-job-experience')) {
+            e.target.closest('.job-experience').remove();
+        }
+    });
+
+    document.getElementById('add-language').addEventListener('click', function () {
+        const languageSection = document.getElementById('language-section');
+        const newLanguageEntry = document.querySelector('.language-entry').cloneNode(true);
+        newLanguageEntry.querySelectorAll('select').forEach(select => select.value = '');
+        languageSection.appendChild(newLanguageEntry);
+    });
+</script>
+{% include 'myjobs/footer.html' %}
