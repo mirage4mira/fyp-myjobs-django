@@ -3,48 +3,39 @@ from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.db import connection
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.models import User
 
 def index(request):
     return render(request, 'myjobs/home.html')
 
 def signin(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
+        username = request.POST.get('username')
         password = request.POST.get('password')
 
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id, password FROM users WHERE email = %s", [email])
-            user = cursor.fetchone()
-
-        if user and check_password(password, user[1]):
-            request.session['user_id'] = user[0]
-            return redirect('home')  # Replace 'home' with your desired redirect URL
+       # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        print(user)
+        if user is not None:
+            request.session['user_id'] = user.id
+            login(request, user)  # Logs in the user and sets request.user
+            return redirect('home')
         else:
-            return render(request, 'myjobs/signin.html', {'error': 'Invalid email or password'})
+            return render(request, 'myjobs/signin.html', {'error': 'Invalid credentials'})
 
     return render(request, 'myjobs/signin.html')
 
 def register(request):
     if request.method == 'POST':
-        # Print data from the request for debugging
-        # raise Exception(str(request))
-        
-    
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         
-        # Hash the password
-        hashed_password = make_password(password)
-        
-        # Insert into the database
         try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO users (username, email, password)
-                    VALUES (%s, %s, %s)
-                """, [username, email, hashed_password])
+            # Use Django's default User model to create a new user
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.save()
             messages.success(request, 'Registration successful!')
             return redirect('signin')
         except Exception as e:
@@ -53,6 +44,15 @@ def register(request):
     return render(request, 'myjobs/register.html')
 
 def setup(request):
+    if request.method == 'POST':
+        # Logic to update profile completion status
+        # Example: Update `profile_completed` to True in the database
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE users SET profile_completed = TRUE WHERE id = %s
+            """, [request.user.id])
+        return redirect('home')  # Redirect to home after setup completion
+
     return render(request, 'myjobs/setup_profile.html')
 
 def jobs(request):
