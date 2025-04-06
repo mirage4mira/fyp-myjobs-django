@@ -1,0 +1,70 @@
+{% include 'myjobs/header.html' %}
+<div class="container" style="margin-top: 20px; margin-bottom: 20px;">
+    <!-- Display job information -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">{{ job.title }}</h2>
+            <p class="card-text">{{ job.description }}</p>
+            <p class="card-text"><strong>Location:</strong> {{ job.location }}</p>
+            <p class="card-text"><strong>Salary:</strong> {{ job.salary }}</p>
+            <p class="card-text"><strong>Job Type:</strong> {{ job.job_type }}</p>
+        </div>
+    </div>
+    <!-- End of job information -->
+    <h1 class="text-center mb-4">Apply for Job</h1>
+    <form method="POST" action="/submit-application">
+        <input type="hidden" name="job_id" value="{{ job_id }}">
+        <div class="mb-3">
+            <label for="applicant_name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="applicant_name" name="applicant_name" value="{{ user.first_name }} {{ user.last_name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="applicant_email" name="applicant_email" value="{{ user.email }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_phone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="applicant_phone" name="applicant_phone" value="{{ user.phone }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_address" class="form-label">Address</label>
+            <input type="text" class="form-control" id="applicant_address" name="applicant_address" value="{{ user_profile.home_location }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_education" class="form-label">Education Level</label>
+            <select class="form-control" id="applicant_education" name="applicant_education" required>
+                <option value="" disabled {% if not user_profile.education %}selected{% endif %}>Select your education level</option>
+                <option value="high_school" {% if user_profile.education == "high_school" %}selected{% endif %}>High School</option>
+                <option value="bachelor" {% if user_profile.education == "bachelor" %}selected{% endif %}>Bachelor's Degree</option>
+                <option value="master" {% if user_profile.education == "master" %}selected{% endif %}>Master's Degree</option>
+                <option value="phd" {% if user_profile.education == "phd" %}selected{% endif %}>PhD</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_language" class="form-label">Languages and Proficiency</label>
+            <input type="text" class="form-control" id="applicant_language" name="applicant_language" placeholder="e.g., English (Fluent), Spanish (Intermediate)" required>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_skills" class="form-label">Skills</label>
+            <select class="form-control" id="applicant_skills" name="applicant_skills" multiple required>
+                <option value="communication">Communication</option>
+                <option value="teamwork">Teamwork</option>
+                <option value="problem_solving">Problem Solving</option>
+                <option value="leadership">Leadership</option>
+                <option value="technical">Technical Skills</option>
+                <!-- Add more skills as needed -->
+            </select>
+            <small class="form-text text-muted">Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_experience" class="form-label">Job Experience</label>
+            <textarea class="form-control" id="applicant_experience" name="applicant_experience" rows="4" placeholder="Describe your job experience..." required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="applicant_resume" class="form-label">Upload Resume</label>
+            <input type="file" class="form-control" id="applicant_resume" name="applicant_resume" required>
+        </div>
+        <button type="submit" class="btn btn-success">Submit Application</button>
+    </form>
+</div>
+{% include 'myjobs/footer.html' %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Applications for {{ job.title }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Applicant Name</th>
+            <th>Email</th>
+            <th>Resume</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.applicant.name }}</td>
+            <td>{{ application.applicant.email }}</td>
+            <td><a href="{{ application.resume.url }}">Download</a></td>
+            <td>{{ application.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

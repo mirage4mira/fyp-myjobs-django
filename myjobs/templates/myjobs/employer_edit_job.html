@@ -1,0 +1,43 @@
+{% include 'myjobs/header.html' %}
+<div class="container mt-4">
+    <h2 class="mb-4">Edit Job</h2>
+    <form method="post" class="needs-validation mb-5" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="job_title" class="form-label">Job Title:</label>
+            <input type="text" id="job_title" name="job_title" class="form-control" value="{{ job.title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="job_description" class="form-label">Description:</label>
+            <textarea id="job_description" name="job_description" class="form-control" rows="4" required>{{ job.description }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="job_location" class="form-label">Location:</label>
+            <input type="text" id="job_location" name="job_location" class="form-control" value="{{ job.location }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="job_salary" class="form-label">Salary:</label>
+            <input type="number" id="job_salary" name="job_salary" class="form-control" value="{{ job.salary }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="number_of_candidates" class="form-label">Number of Candidates:</label>
+            <input type="number" id="number_of_candidates" name="number_of_candidates" class="form-control" value="{{ job.number_of_candidates }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="required_education" class="form-label">Required Education:</label>
+            <select id="required_education" name="required_education" class="form-select" required>
+                <option value="" disabled selected>Select education level</option>
+                <option value="High School" {% if job.required_education == "High School" %}selected{% endif %}>High School</option>
+                <option value="Bachelors" {% if job.required_education == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                <option value="Masters" {% if job.required_education == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                <option value="Doctorate" {% if job.required_education == "Doctorate" %}selected{% endif %}>Doctorate</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="required_experience_years" class="form-label">Required Experience (Years):</label>
+            <input type="number" id="required_experience_years" name="required_experience_years" class="form-control" value="{{ job.required_experience_years }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>
+{% include 'myjobs/footer.html' %}

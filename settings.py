@@ -10,4 +10,9 @@ class ProfileCompletionMiddleware:
         response = self.get_response(request)
         return response
 
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 

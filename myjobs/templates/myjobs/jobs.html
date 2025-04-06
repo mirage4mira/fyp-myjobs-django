@@ -8,25 +8,31 @@
         </div>
     </form>
     <!-- End of Job Search Bar -->
-    <h1 class="text-center mb-4">Job Details</h1>
-    <div class="card">
+    <h1 class="text-center mb-4">Job Listings</h1>
+    {% for job in jobs %}
+    <div class="card mb-4">
         <div class="card-header">
-            <h2 class="card-title">Job Title</h2>
+            <h2 class="card-title">{{ job.title }}</h2>
         </div>
         <div class="card-body d-flex justify-content-between align-items-start">
             <div>
-                <p><strong>Company:</strong> Company Name</p>
-                <p><strong>Location:</strong> Job Location</p>
-                <p><strong>Job Type:</strong> Full-Time/Part-Time</p>
-                <p><strong>Salary:</strong> Salary Range</p>
+                <p><strong>Company:</strong> {{ job.company_name }}</p>
+                <p><strong>Location:</strong> {{ job.job.location }}</p>
+                <p><strong>Job Type:</strong> {{ job.job.job_type }}</p>
+                <p><strong>Salary:</strong> {{ job.job.salary }}</p>
                 <p><strong>Description:</strong></p>
-                <p>Job description goes here...</p>
+                <p>{{ job.job.description }}</p>
             </div>
-            <img src="path/to/company-logo.png" alt="Company Logo" style="max-width: 150px; max-height: 150px;">
+            {% if job.company_logo %}
+                <img src="data:image/png;base64,{{ job.encoded_image }}" alt="{{ job.company_name }} Logo" style="max-width: 150px; max-height: 150px;">
+            {% else %}
+                <p>No logo available</p>
+            {% endif %}
         </div>
         <div class="card-footer text-center">
-            <button class="btn btn-primary">Apply Now</button>
+            <a href="/jobs/{{ job.job.id }}/apply" class="btn btn-primary">Apply Now</a>
         </div>
     </div>
+    {% endfor %}
 </div>
 {% include 'myjobs/footer.html' %}

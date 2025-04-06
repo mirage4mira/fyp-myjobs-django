@@ -4,6 +4,7 @@
         <div class="col-md-6">
             <h2>Create a Job</h2>
             <form method="POST" action="/employer/create-job">
+                {% csrf_token %}
                 <div class="mb-3">
                     <label for="job_title" class="form-label">Job Title</label>
                     <input type="text" class="form-control" id="job_title" name="job_title" required>
@@ -21,24 +22,33 @@
                     <input type="number" class="form-control" id="job_salary" name="job_salary" required>
                 </div>
                 <div class="mb-3">
-                    <label for="num_candidates" class="form-label">Number of Candidates</label>
-                    <input type="number" class="form-control" id="num_candidates" name="num_candidates" required>
+                    <label for="number_of_candidates" class="form-label">Number of Candidates</label>
+                    <input type="number" class="form-control" id="number_of_candidates" name="number_of_candidates" required>
                 </div>
                 <div class="mb-3">
                     <label for="required_education" class="form-label">Required Education</label>
-                    <input type="text" class="form-control" id="required_education" name="required_education">
+                    <select class="form-control" id="required_education" name="required_education">
+                        <option value="">Select Education Level</option>
+                        <option value="high_school">High School</option>
+                        <option value="bachelor">Bachelor's Degree</option>
+                        <option value="master">Master's Degree</option>
+                        <option value="phd">PhD</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="required_experience_years" class="form-label">Required Experience (in years)</label>
+                    <input type="number" class="form-control" id="required_experience_years" name="required_experience_years">
                     <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" id="education_mandatory" name="education_mandatory">
-                        <label class="form-check-label" for="education_mandatory">Mandatory</label>
+                        <!-- <input class="form-check-input" type="checkbox" id="experience_mandatory" name="experience_mandatory"> -->
+                        <!-- <label class="form-check-label" for="experience_mandatory">Mandatory</label> -->
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="required_experience" class="form-label">Required Experience (in years)</label>
-                    <input type="number" class="form-control" id="required_experience" name="required_experience">
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" id="experience_mandatory" name="experience_mandatory">
-                        <label class="form-check-label" for="experience_mandatory">Mandatory</label>
-                    </div>
+                    <label for="job_type" class="form-label">Job Type</label>
+                    <select class="form-control" id="job_type" name="job_type" required>
+                        <option value="full_time">Full-Time</option>
+                        <option value="part_time">Part-Time</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Post Job</button>
             </form>
@@ -54,15 +64,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Example row -->
+                    {% for job in jobs %}
                     <tr>
-                        <td>Software Engineer</td>
-                        <td>15</td>
+                        <td>{{ job.title }}</td>
+                        <td>{{ job.application_count }}</td>
                         <td>
-                            <a href="/employer/view-applications/1" class="btn btn-sm btn-primary">View</a>
+                            <a href="/employer/job/{{ job.id }}/edit" class="btn btn-sm btn-primary">Edit</a>
                         </td>
                     </tr>
-                    <!-- Add dynamic rows here -->
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

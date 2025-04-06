@@ -1,128 +1,162 @@
 {% include 'myjobs/header.html' %}
 <div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px - 40px); margin-top: 20px; margin-bottom: 20px;">
-    <form method="POST" action="{% url 'setup_profile' %}" style="max-width: 400px; width: 100%;">
+    <form method="POST" action="{% if action == 'edit_profile' %}{% url 'edit_profile' %}{% else %}{% url 'setup_profile' %}{% endif %}" style="max-width: 400px; width: 100%;">
         {% csrf_token %}
-        <h2 class="text-center mb-4">Setup Profile</h2>
+        <h2 class="text-center mb-4">
+            {% if action == 'edit_profile' %}
+                Edit Profile
+            {% else %}
+                Setup Profile
+            {% endif %}
+        </h2>
+        
+        <div class="mb-3">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter your first name" value="{{ user_profile.first_name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Enter your last name" value="{{ user_profile.last_name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="phone_number" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone_number" name="phone_number" placeholder="Enter your phone number" value="{{ user_profile.phone_number }}" required>
+        </div>
+        
         <div class="mb-3">
             <label for="home_location" class="form-label">Home Location</label>
-            <input list="home_locations" class="form-control" id="home_location" name="home_location" placeholder="Enter or select your home city">
-            <datalist id="home_locations">
-                <option value="Kuala Lumpur">
-                <option value="George Town">
-                <option value="Ipoh">
-                <option value="Shah Alam">
-                <option value="Petaling Jaya">
-                <option value="Johor Bahru">
-                <option value="Malacca City">
-                <option value="Alor Setar">
-                <option value="Kota Bharu">
-                <option value="Kuala Terengganu">
-                <option value="Kuantan">
-                <option value="Seremban">
-                <option value="Kuching">
-                <option value="Miri">
-                <option value="Kota Kinabalu">
-                <option value="Sandakan">
-                <option value="Tawau">
-            </datalist>
+            <select class="form-control" id="home_location" name="home_location" required>
+                <option value="" disabled>Select your home city</option>
+                <option value="Kuala Lumpur" {% if user_profile.home_location == "Kuala Lumpur" %}selected{% endif %}>Kuala Lumpur</option>
+                <option value="George Town" {% if user_profile.home_location == "George Town" %}selected{% endif %}>George Town</option>
+                <option value="Ipoh" {% if user_profile.home_location == "Ipoh" %}selected{% endif %}>Ipoh</option>
+                <option value="Shah Alam" {% if user_profile.home_location == "Shah Alam" %}selected{% endif %}>Shah Alam</option>
+                <option value="Petaling Jaya" {% if user_profile.home_location == "Petaling Jaya" %}selected{% endif %}>Petaling Jaya</option>
+                <option value="Johor Bahru" {% if user_profile.home_location == "Johor Bahru" %}selected{% endif %}>Johor Bahru</option>
+                <option value="Malacca City" {% if user_profile.home_location == "Malacca City" %}selected{% endif %}>Malacca City</option>
+                <option value="Alor Setar" {% if user_profile.home_location == "Alor Setar" %}selected{% endif %}>Alor Setar</option>
+                <option value="Kota Bharu" {% if user_profile.home_location == "Kota Bharu" %}selected{% endif %}>Kota Bharu</option>
+                <option value="Kuala Terengganu" {% if user_profile.home_location == "Kuala Terengganu" %}selected{% endif %}>Kuala Terengganu</option>
+                <option value="Kuantan" {% if user_profile.home_location == "Kuantan" %}selected{% endif %}>Kuantan</option>
+                <option value="Seremban" {% if user_profile.home_location == "Seremban" %}selected{% endif %}>Seremban</option>
+                <option value="Kuching" {% if user_profile.home_location == "Kuching" %}selected{% endif %}>Kuching</option>
+                <option value="Miri" {% if user_profile.home_location == "Miri" %}selected{% endif %}>Miri</option>
+                <option value="Kota Kinabalu" {% if user_profile.home_location == "Kota Kinabalu" %}selected{% endif %}>Kota Kinabalu</option>
+                <option value="Sandakan" {% if user_profile.home_location == "Sandakan" %}selected{% endif %}>Sandakan</option>
+                <option value="Tawau" {% if user_profile.home_location == "Tawau" %}selected{% endif %}>Tawau</option>
+            </select>
         </div>
         
         <div id="job-experience-section">
-            <h4 class="mb-3">Job Experience</h4>
+            <h4 class="mb-3">Past Job Experience</h4>
+            {% for job in job_experiences %}
             <div class="job-experience mb-3">
                 <div class="mb-3">
                     <label for="job_title" class="form-label">Job Title</label>
-                    <input type="text" class="form-control" id="job_title" name="job_title[]" placeholder="Enter your job title">
+                    <input type="text" class="form-control" name="job_title[]" placeholder="Enter your job title" value="{{ job.job_title }}">
                 </div>
                 <div class="mb-3">
                     <label for="company_name" class="form-label">Company Name</label>
-                    <input type="text" class="form-control" id="company_name" name="company_name[]" placeholder="Enter your company name">
+                    <input type="text" class="form-control" name="company_name[]" placeholder="Enter your company name" value="{{ job.company_name }}">
                 </div>
                 <div class="mb-3">
                     <label for="date_started" class="form-label">Date Started</label>
-                    <input type="month" class="form-control" id="date_started" name="date_started[]">
+                    <input type="date" class="form-control" name="date_started[]" value="{{ job.date_started|date:'Y-m-d' }}">
                 </div>
                 <div class="mb-3">
                     <label for="date_ended" class="form-label">Date Ended</label>
-                    <input type="month" class="form-control" id="date_ended" name="date_ended[]">
+                    <input type="date" class="form-control" name="date_ended[]" value="{{ job.date_ended|date:'Y-m-d' }}">
                 </div>
                 <button type="button" class="btn btn-danger btn-sm remove-job-experience">Remove</button>
             </div>
+            {% endfor %}
         </div>
-        <button type="button" class="btn btn-secondary mb-3" id="add-job-experience">Add Job Experience</button>
+        <button type="button" class="btn btn-secondary mb-3" id="add-job-experience">Add Past Job Experience</button>
 
         <div class="mb-3">
-            <label for="preferred_job_classification" class="form-label">Preferred Job Classification</label>
-            <select class="form-control" id="preferred_job_classification" name="preferred_job_classification">
-                <option value="" disabled selected>Select your preferred job classification</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Data & Analytics">Data & Analytics</option>
-                <option value="Product Management">Product Management</option>
-                <option value="Design">Design</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
-                <option value="Human Resources">Human Resources</option>
-                <option value="Finance">Finance</option>
-                <option value="Customer Support">Customer Support</option>
+            <label for="preferred_job_classification" class="form-label">Preferred Job</label>
+            <select class="form-control" id="preferred_job_classification" name="preferred_job_classification[]" multiple>
+                <option value="Engineering" {% if "Engineering" in preferred_job_classifications %}selected{% endif %}>Engineering</option>
+                <option value="Data & Analytics" {% if "Data & Analytics" in preferred_job_classifications %}selected{% endif %}>Data & Analytics</option>
+                <option value="Product Management" {% if "Product Management" in preferred_job_classifications %}selected{% endif %}>Product Management</option>
+                <option value="Design" {% if "Design" in preferred_job_classifications %}selected{% endif %}>Design</option>
+                <option value="Marketing" {% if "Marketing" in preferred_job_classifications %}selected{% endif %}>Marketing</option>
+                <option value="Sales" {% if "Sales" in preferred_job_classifications %}selected{% endif %}>Sales</option>
+                <option value="Human Resources" {% if "Human Resources" in preferred_job_classifications %}selected{% endif %}>Human Resources</option>
+                <option value="Finance" {% if "Finance" in preferred_job_classifications %}selected{% endif %}>Finance</option>
+                <option value="Customer Support" {% if "Customer Support" in preferred_job_classifications %}selected{% endif %}>Customer Support</option>
             </select>
+            <small class="form-text text-muted">This will be used to generate relevant job recommendations for you. Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
         </div>
+
         <div class="mb-3">
             <label for="education" class="form-label">Education</label>
-            <select class="form-control" id="education" name="education">
-                <option value="" disabled selected>Select your education level</option>
-                <option value="High School Diploma">High School Diploma</option>
-                <option value="Associate Degree">Associate Degree</option>
-                <option value="Bachelor's Degree">Bachelor's Degree</option>
-                <option value="Master's Degree">Master's Degree</option>
-                <option value="Doctorate">Doctorate</option>
-                <option value="Professional Certification">Professional Certification</option>
+            <select class="form-control" id="education" name="education" required>
+                <option value="" disabled>Select your education level</option>
+                <option value="High School" {% if user_profile.education == "High School Diploma" %}selected{% endif %}>High School Diploma</option>
+                <option value="Bachelors" {% if user_profile.education == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                <option value="Masters" {% if user_profile.education == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                <option value="Doctorate" {% if user_profile.education == "Doctorate" %}selected{% endif %}>Doctorate</option>
             </select>
         </div>
         <div class="mb-3">
-            <label for="skill_language" class="form-label">Skill</label>
-            <select class="form-control" id="skill_language" name="skill_language[]" multiple>
-                <option value="Programming">Programming</option>
-                <option value="Data Analysis">Data Analysis</option>
-                <option value="Project Management">Project Management</option>
-                <option value="Graphic Design">Graphic Design</option>
-                <option value="Digital Marketing">Digital Marketing</option>
-                <option value="Sales">Sales</option>
-                <option value="Customer Service">Customer Service</option>
-                <option value="Content Writing">Content Writing</option>
-                <option value="Public Speaking">Public Speaking</option>
-                <option value="Problem Solving">Problem Solving</option>
+            <label for="bio" class="form-label">Bio</label>
+            <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself">{{ user_profile.bio }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="skills" class="form-label">Skill</label>
+            <select class="form-control" id="skills" name="skills[]" multiple>
+                <option value="Programming" {% if "Programming" in skills %}selected{% endif %}>Programming</option>
+                <option value="Data Analysis" {% if "Data Analysis" in skills %}selected{% endif %}>Data Analysis</option>
+                <option value="Project Management" {% if "Project Management" in skills %}selected{% endif %}>Project Management</option>
+                <option value="Graphic Design" {% if "Graphic Design" in skills %}selected{% endif %}>Graphic Design</option>
+                <option value="Digital Marketing" {% if "Digital Marketing" in skills %}selected{% endif %}>Digital Marketing</option>
+                <option value="Sales" {% if "Sales" in skills %}selected{% endif %}>Sales</option>
+                <option value="Customer Service" {% if "Customer Service" in skills %}selected{% endif %}>Customer Service</option>
+                <option value="Content Writing" {% if "Content Writing" in skills %}selected{% endif %}>Content Writing</option>
+                <option value="Public Speaking" {% if "Public Speaking" in skills %}selected{% endif %}>Public Speaking</option>
+                <option value="Problem Solving" {% if "Problem Solving" in skills %}selected{% endif %}>Problem Solving</option>
             </select>
             <small class="form-text text-muted">Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
         </div>
         <div class="mb-3">
             <label for="language" class="form-label">Language</label>
             <div id="language-section">
+                {% for language_proficiency in language_proficiencies %}
                 <div class="language-entry mb-3">
-                    <select class="form-control mb-2" id="language" name="language[]">
-                        <option value="" disabled selected>Select a language</option>
-                        <option value="English">English</option>
-                        <option value="Mandarin">Mandarin</option>
-                        <option value="Malay">Malay</option>
-                        <option value="Tamil">Tamil</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Korean">Korean</option>
-                        <option value="Arabic">Arabic</option>
+                    <select class="form-control mb-2" name="languages[]">
+                        <option value="" disabled>Select a language</option>
+                        <option value="English" {% if language_proficiency.language == "English" %}selected{% endif %}>English</option>
+                        <option value="Mandarin" {% if language_proficiency.language == "Mandarin" %}selected{% endif %}>Mandarin</option>
+                        <option value="Malay" {% if language_proficiency.language == "Malay" %}selected{% endif %}>Malay</option>
+                        <option value="Tamil" {% if language_proficiency.language == "Tamil" %}selected{% endif %}>Tamil</option>
+                        <option value="Spanish" {% if language_proficiency.language == "Spanish" %}selected{% endif %}>Spanish</option>
+                        <option value="French" {% if language_proficiency.language == "French" %}selected{% endif %}>French</option>
+                        <option value="German" {% if language_proficiency.language == "German" %}selected{% endif %}>German</option>
+                        <option value="Japanese" {% if language_proficiency.language == "Japanese" %}selected{% endif %}>Japanese</option>
+                        <option value="Korean" {% if language_proficiency.language == "Korean" %}selected{% endif %}>Korean</option>
+                        <option value="Arabic" {% if language_proficiency.language == "Arabic" %}selected{% endif %}>Arabic</option>
                     </select>
-                    <select class="form-control" name="proficiency[]">
-                        <option value="" disabled selected>Select proficiency</option>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
-                        <option value="Native">Native</option>
+                    <select class="form-control" name="proficiencies[]">
+                        <option value="" disabled>Select proficiency</option>
+                        <option value="Beginner" {% if language_proficiency.proficiency == "Beginner" %}selected{% endif %}>Beginner</option>
+                        <option value="Intermediate" {% if language_proficiency.proficiency == "Intermediate" %}selected{% endif %}>Intermediate</option>
+                        <option value="Advanced" {% if language_proficiency.proficiency == "Advanced" %}selected{% endif %}>Advanced</option>
+                        <option value="Native" {% if language_proficiency.proficiency == "Native" %}selected{% endif %}>Native</option>
                     </select>
+                    <button type="button" class="btn btn-danger btn-sm remove-language">Remove</button>
                 </div>
+                {% endfor %}
             </div>
             <button type="button" class="btn btn-secondary btn-sm" id="add-language">Add Language</button>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Save Profile</button>
+        <button type="submit" class="btn btn-primary w-100">
+            {% if action == 'edit_profile' %}
+                Save Profile
+            {% else %}
+                Create Profile
+            {% endif %}
+        </button>
     </form>
 </div>
 <script>
@@ -135,7 +169,13 @@
 
     document.addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('remove-job-experience')) {
-            e.target.closest('.job-experience').remove();
+            const jobExperienceSection = document.getElementById('job-experience-section');
+            const jobExperiences = jobExperienceSection.querySelectorAll('.job-experience');
+            if (jobExperiences.length > 1) {
+                e.target.closest('.job-experience').remove();
+            } else {
+                alert('At least one past job experience must be present.');
+            }
         }
     });
 
@@ -143,7 +183,22 @@
         const languageSection = document.getElementById('language-section');
         const newLanguageEntry = document.querySelector('.language-entry').cloneNode(true);
         newLanguageEntry.querySelectorAll('select').forEach(select => select.value = '');
+        newLanguageEntry.querySelector('.remove-language').addEventListener('click', function () {
+            newLanguageEntry.remove();
+        });
         languageSection.appendChild(newLanguageEntry);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-language')) {
+            const languageSection = document.getElementById('language-section');
+            const languageEntries = languageSection.querySelectorAll('.language-entry');
+            if (languageEntries.length > 1) {
+                e.target.closest('.language-entry').remove();
+            } else {
+                alert('At least one language must be present.');
+            }
+        }
     });
 </script>
 {% include 'myjobs/footer.html' %}
