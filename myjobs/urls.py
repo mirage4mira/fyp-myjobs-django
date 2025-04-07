@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from . import views
-from .views import edit_job, trace_application, apply_job  # Import the new view
+from .views import edit_job, trace_application, apply_job,delete_job  # Import the new view
 
 urlpatterns = [
     path('', views.index, name='home'),
@@ -18,6 +18,7 @@ urlpatterns = [
     path('employer/job/create', views.create_job, name='employer_create_job'),
     path('employer/job/<int:job_id>/edit/', edit_job, name='employer_edit_job'),
     path('employer/job/<int:job_id>/trace/', trace_application, name='employer_trace_application'),
+    path('employer/job/<int:job_id>/delete/', delete_job, name='employer_delete_job'),  # Ensure trailing slash
     path('jobs/<int:job_id>/apply', apply_job, name='apply_job'),  # Add the new route
 ]
 

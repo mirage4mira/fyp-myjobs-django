@@ -7,9 +7,10 @@ from django.db import connection
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_protect
-from .models import UserProfile, Skill, JobExperience, PreferredJobClassification, Employer, Job, LanguageProficiency
+from .models import UserProfile, Skill, JobExperience, PreferredJobClassification, Employer, Job, LanguageProficiency, JobApplication, ApplicantSkill, ApplicantPastJobExperience,ApplicantLanguageProficiency
 from django.core.files.storage import FileSystemStorage
-
+from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
 
 def index(request):
     return render(request, 'myjobs/home.html')
@@ -131,6 +132,7 @@ def setup(request):
                 job_classification=job
             )
 
+        messages.success(request, 'Profile setup completed successfully!')
         return redirect('home')  # Redirect to home after setup completion
 
     return render(request, 'myjobs/setup_profile.html', {'home_locations': ['Location1', 'Location2', 'Location3']})  # Pass available locations
@@ -229,10 +231,21 @@ def edit_profile(request):
     return render(request, 'myjobs/setup_profile.html',{'action': 'edit_profile'})  # Pass action to differentiate between setup and edit
 
 def jobs(request):
-    jobs = Job.objects.select_related('company').all()  # Fetch all jobs with related company details
+    search_keyword = request.GET.get('search', '')  # Get search keyword from query parameters
+    if search_keyword:
+        jobs_title = Job.objects.filter(title__icontains=search_keyword).select_related('company')
+        jobs_description = Job.objects.filter(description__icontains=search_keyword).select_related('company')
+        jobs_location = Job.objects.filter(location__icontains=search_keyword).select_related('company')
+        jobs_company = Job.objects.filter(company__company_name__icontains=search_keyword).select_related('company')
+        
+        jobs = list(jobs_title) + list(jobs_description) + list(jobs_location) + list(jobs_company)
+    else:
+        jobs = Job.objects.select_related('company').all()  # Fetch all jobs with related company details
+    
     jobs_with_company = []
     for job in jobs:
         encoded_image = None
+        job.job_type = job.job_type.replace('_', ' ').title() if job.job_type else None
         if job.company.company_logo:  # Assuming the Job model has an 'image' field
             with open(job.company.company_logo.path, "rb") as image_file:
                 encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
@@ -242,7 +255,13 @@ def jobs(request):
             'company_logo': job.company.company_logo if job.company.company_logo else None,
             'encoded_image': encoded_image  # Include encoded image
         })
-    return render(request, 'myjobs/jobs.html', {'jobs': jobs_with_company})
+    
+    # Pagination
+    paginator = Paginator(jobs_with_company, 15)  # Show 15 jobs per page
+    page_number = request.GET.get('page')
+    jobs_page = paginator.get_page(page_number)
+
+    return render(request, 'myjobs/jobs.html', {'jobs': jobs_page, 'search': search_keyword})
 
 def employer_setup(request):
     if request.method == 'POST':
@@ -287,7 +306,9 @@ def employer_dashboard(request):
 
     # Fetch jobs posted by the employer
     jobs = Job.objects.filter(company=employer)
-
+    # Count the number of applications for each job
+    for job in jobs:
+        job.application_count = JobApplication.objects.filter(job=job).count()
     return render(request, 'myjobs/employer_dashboard.html', {'employer': employer, 'jobs': jobs})
 
 @csrf_protect
@@ -344,6 +365,16 @@ def edit_job(request, job_id):
 
     return render(request, 'myjobs/employer_edit_job.html', {'job': job})
 
+@require_POST
+def delete_job(request, job_id):
+    try:
+        job = Job.objects.get(id=job_id, company__user=request.user)  # Ensure the job belongs to the logged-in employer
+        job.delete()
+        messages.success(request, 'Job deleted successfully!')
+    except Job.DoesNotExist:
+        messages.error(request, 'Job not found or you do not have permission to delete this job.')
+    return redirect('employer_dashboard')  # Add trailing slash
+
 def trace_application(request, job_id):
     if not request.user.is_authenticated:
         messages.warning(request, 'You need to sign in to trace applications.')
@@ -359,31 +390,88 @@ def trace_application(request, job_id):
     return render(request, 'myjobs/trace_application.html', {'job': job, 'applications': applications})
 
 def apply_job(request, job_id):
+
+    if not request.user.is_authenticated:
+        messages.warning(request, 'You need to sign in to apply for this job.')
+        request.session['next'] = f'/jobs/{job_id}/apply'
+        return redirect('signin')
+    
+    existing_application = JobApplication.objects.filter(user_id=request.user.id, job_id=job_id).first()
+    if existing_application:
+        messages.error(request, "You have already submitted an application for this job.")
+        return redirect(request.META.get('HTTP_REFERER', 'jobs'))
+    
     if request.method == 'POST':
-        job_id = job_id
-        applicant_name = request.POST.get('applicant_name')
-        applicant_email = request.POST.get('applicant_email')
-        applicant_resume = request.FILES.get('applicant_resume')
+
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        applicant_resume = request.FILES.get('resume')
+        phone_number = request.POST.get('phone_number')
+        home_location = request.POST.get('home_location')  # Assuming home_location is now a select fielde
+        education = request.POST.get('education')  # Assuming education is now a select field
+        applicant_bio = request.POST.get('bio')
+        skills = request.POST.getlist('skills[]')
+        job_titles = request.POST.getlist('job_title[]')
+        company_names = request.POST.getlist('company_name[]')
+        dates_started = request.POST.getlist('date_started[]')
+        dates_ended = request.POST.getlist('date_ended[]')
+        languages = request.POST.getlist('languages[]')
+        proficiencies = request.POST.getlist('proficiencies[]')
+
+        # Check if the user has already applied for the job
 
         # Save the uploaded resume file
         fs = FileSystemStorage()
-        resume_filename = fs.save(applicant_resume.name, applicant_resume)
+        resume_filename = fs.save(applicant_resume.name, applicant_resume)  # Use the file's name
 
-        # Logic to save application details (e.g., save to database)
-        # Example:
-        # JobApplication.objects.create(
-        #     job_id=job_id,
-        #     name=applicant_name,
-        #     email=applicant_email,
-        #     resume=resume_filename
-        # )
+        # Save application details
+        job_application = JobApplication.objects.create(
+            job_id=job_id,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            resume=resume_filename,
+            phone_number=phone_number,
+            home_location=home_location,  # Assuming home_location is now a select field
+            education=education,  # Assuming education is now a select field
+            bio=applicant_bio,  # Assuming education is now a select field
+            user_id=request.user.id,  # Assuming the user is logged in and has an ID
+        )
 
-        # Redirect to a success page or return a success message
+        # Save applicant skills
+        for skill_name in skills:
+            ApplicantSkill.objects.create(
+                job_application=job_application,
+                name=skill_name
+            )
+
+        # Save applicant past job experiences
+        for title, company, start, end in zip(job_titles, company_names, dates_started, dates_ended):
+            ApplicantPastJobExperience.objects.create(
+                job_application=job_application,
+                job_title=title,
+                company_name=company,
+                date_started=start,
+                date_ended=end
+            )
+
+        # Save applicant language proficiencies
+        for lang, prof in zip(languages, proficiencies):
+            ApplicantLanguageProficiency.objects.create(
+                job_application=job_application,
+                language=lang,
+                proficiency=prof
+            )
+
+        messages.success(request, "Application submitted successfully!")
+        return redirect('jobs')
         return HttpResponse("Application submitted successfully!")
 
     elif request.method == 'GET':
         try:
             job = Job.objects.get(id=job_id)  # Fetch the job details
+            job.job_type = job.job_type.replace('_', ' ').title() if job.job_type else None
         except Job.DoesNotExist:
             messages.error(request, 'Job not found.')
             return redirect('jobs')  # Redirect to jobs page if job does not exist
@@ -394,7 +482,8 @@ def apply_job(request, job_id):
                 user_profile = UserProfile.objects.get(user=request.user)  # Fetch the user's profile
                 # Pre-fill application form with user profile details if available
                 if user_profile:
-                    skills = user_profile.skills.all()  # Fetch user's skills
+                    skills = Skill.objects.filter(user_profile_id = user_profile.id)
+                    skills = [skill.name for skill in skills]
                     # print("User Skills:", [skill.name for skill in skills])
                     languages = LanguageProficiency.objects.filter(user_profile_id = user_profile.id)  # Assuming a related name for language proficiency
                     job_experiences = JobExperience.objects.filter(user_profile_id = user_profile.id)  # Fetch user's job experiences
@@ -412,11 +501,11 @@ def apply_job(request, job_id):
                 'job': job,
                 'user_profile': user_profile,
                 'skills': skills,
-                'languages': languages,
+                'language_proficiencies': languages,
                 'job_experiences': job_experiences  # Pass additional details to the view
             })
 
-    return redirect('jobs')  # Redirect to jobs page if not a valid request method
+    return redirect('job')  # Redirect to jobs page if not a valid request method
 
 def logout_view(request):
     logout(request)

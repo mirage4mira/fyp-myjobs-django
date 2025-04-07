@@ -3,7 +3,7 @@
     <div class="row">
         <div class="col-md-6">
             <h2>Create a Job</h2>
-            <form method="POST" action="/employer/create-job">
+            <form method="POST" action="/employer/job/create">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="job_title" class="form-label">Job Title</label>
@@ -15,7 +15,26 @@
                 </div>
                 <div class="mb-3">
                     <label for="job_location" class="form-label">Job Location</label>
-                    <input type="text" class="form-control" id="job_location" name="job_location" required>
+                    <select class="form-control" id="job_location" name="job_location" required>
+                        <option value="" disabled selected>Select Job Location</option>
+                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                        <option value="George Town">George Town</option>
+                        <option value="Ipoh">Ipoh</option>
+                        <option value="Shah Alam">Shah Alam</option>
+                        <option value="Petaling Jaya">Petaling Jaya</option>
+                        <option value="Johor Bahru">Johor Bahru</option>
+                        <option value="Malacca City">Malacca City</option>
+                        <option value="Alor Setar">Alor Setar</option>
+                        <option value="Kota Bharu">Kota Bharu</option>
+                        <option value="Kuala Terengganu">Kuala Terengganu</option>
+                        <option value="Kuantan">Kuantan</option>
+                        <option value="Seremban">Seremban</option>
+                        <option value="Kuching">Kuching</option>
+                        <option value="Miri">Miri</option>
+                        <option value="Kota Kinabalu">Kota Kinabalu</option>
+                        <option value="Sandakan">Sandakan</option>
+                        <option value="Tawau">Tawau</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="job_salary" class="form-label">Salary</label>
@@ -29,10 +48,10 @@
                     <label for="required_education" class="form-label">Required Education</label>
                     <select class="form-control" id="required_education" name="required_education">
                         <option value="">Select Education Level</option>
-                        <option value="high_school">High School</option>
-                        <option value="bachelor">Bachelor's Degree</option>
-                        <option value="master">Master's Degree</option>
-                        <option value="phd">PhD</option>
+                        <option value="High School">High School</option>
+                        <option value="Bachelors">Bachelor's Degree</option>
+                        <option value="Masters">Master's Degree</option>
+                        <option value="Doctorate">Doctorate</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -70,6 +89,10 @@
                         <td>{{ job.application_count }}</td>
                         <td>
                             <a href="/employer/job/{{ job.id }}/edit" class="btn btn-sm btn-primary">Edit</a>
+                            <form method="POST" action="/employer/job/{{ job.id }}/delete/" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this job?');">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

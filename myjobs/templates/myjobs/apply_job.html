@@ -12,59 +12,219 @@
     </div>
     <!-- End of job information -->
     <h1 class="text-center mb-4">Apply for Job</h1>
-    <form method="POST" action="/submit-application">
+    <form method="POST" enctype="multipart/form-data" action="/jobs/{{job.id}}/apply">
+        {% csrf_token %}
         <input type="hidden" name="job_id" value="{{ job_id }}">
         <div class="mb-3">
-            <label for="applicant_name" class="form-label">Full Name</label>
-            <input type="text" class="form-control" id="applicant_name" name="applicant_name" value="{{ user.first_name }} {{ user.last_name }}" required>
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user_profile.first_name }}" required>
         </div>
         <div class="mb-3">
-            <label for="applicant_email" class="form-label">Email Address</label>
-            <input type="email" class="form-control" id="applicant_email" name="applicant_email" value="{{ user.email }}" required>
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user_profile.last_name }}" required>
         </div>
         <div class="mb-3">
-            <label for="applicant_phone" class="form-label">Phone Number</label>
-            <input type="text" class="form-control" id="applicant_phone" name="applicant_phone" value="{{ user.phone }}" required>
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
         </div>
         <div class="mb-3">
-            <label for="applicant_address" class="form-label">Address</label>
-            <input type="text" class="form-control" id="applicant_address" name="applicant_address" value="{{ user_profile.home_location }}" required>
+            <label for="phone_number" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ user_profile.phone_number }}" required>
         </div>
         <div class="mb-3">
-            <label for="applicant_education" class="form-label">Education Level</label>
-            <select class="form-control" id="applicant_education" name="applicant_education" required>
-                <option value="" disabled {% if not user_profile.education %}selected{% endif %}>Select your education level</option>
-                <option value="high_school" {% if user_profile.education == "high_school" %}selected{% endif %}>High School</option>
-                <option value="bachelor" {% if user_profile.education == "bachelor" %}selected{% endif %}>Bachelor's Degree</option>
-                <option value="master" {% if user_profile.education == "master" %}selected{% endif %}>Master's Degree</option>
-                <option value="phd" {% if user_profile.education == "phd" %}selected{% endif %}>PhD</option>
+            <label for="home_location" class="form-label">Home Location</label>
+            <select class="form-control" id="home_location" name="home_location" required>
+                <option value="" disabled>Select your home city</option>
+                <option value="Kuala Lumpur" {% if user_profile.home_location == "Kuala Lumpur" %}selected{% endif %}>Kuala Lumpur</option>
+                <option value="George Town" {% if user_profile.home_location == "George Town" %}selected{% endif %}>George Town</option>
+                <option value="Ipoh" {% if user_profile.home_location == "Ipoh" %}selected{% endif %}>Ipoh</option>
+                <option value="Shah Alam" {% if user_profile.home_location == "Shah Alam" %}selected{% endif %}>Shah Alam</option>
+                <option value="Petaling Jaya" {% if user_profile.home_location == "Petaling Jaya" %}selected{% endif %}>Petaling Jaya</option>
+                <option value="Johor Bahru" {% if user_profile.home_location == "Johor Bahru" %}selected{% endif %}>Johor Bahru</option>
+                <option value="Malacca City" {% if user_profile.home_location == "Malacca City" %}selected{% endif %}>Malacca City</option>
+                <option value="Alor Setar" {% if user_profile.home_location == "Alor Setar" %}selected{% endif %}>Alor Setar</option>
+                <option value="Kota Bharu" {% if user_profile.home_location == "Kota Bharu" %}selected{% endif %}>Kota Bharu</option>
+                <option value="Kuala Terengganu" {% if user_profile.home_location == "Kuala Terengganu" %}selected{% endif %}>Kuala Terengganu</option>
+                <option value="Kuantan" {% if user_profile.home_location == "Kuantan" %}selected{% endif %}>Kuantan</option>
+                <option value="Seremban" {% if user_profile.home_location == "Seremban" %}selected{% endif %}>Seremban</option>
+                <option value="Kuching" {% if user_profile.home_location == "Kuching" %}selected{% endif %}>Kuching</option>
+                <option value="Miri" {% if user_profile.home_location == "Miri" %}selected{% endif %}>Miri</option>
+                <option value="Kota Kinabalu" {% if user_profile.home_location == "Kota Kinabalu" %}selected{% endif %}>Kota Kinabalu</option>
+                <option value="Sandakan" {% if user_profile.home_location == "Sandakan" %}selected{% endif %}>Sandakan</option>
+                <option value="Tawau" {% if user_profile.home_location == "Tawau" %}selected{% endif %}>Tawau</option>
             </select>
         </div>
         <div class="mb-3">
-            <label for="applicant_language" class="form-label">Languages and Proficiency</label>
-            <input type="text" class="form-control" id="applicant_language" name="applicant_language" placeholder="e.g., English (Fluent), Spanish (Intermediate)" required>
+            <label for="education" class="form-label">Education</label>
+            <input type="text" class="form-control" id="education" name="education" value="{{ user_profile.education }}" required>
         </div>
         <div class="mb-3">
-            <label for="applicant_skills" class="form-label">Skills</label>
-            <select class="form-control" id="applicant_skills" name="applicant_skills" multiple required>
-                <option value="communication">Communication</option>
-                <option value="teamwork">Teamwork</option>
-                <option value="problem_solving">Problem Solving</option>
-                <option value="leadership">Leadership</option>
-                <option value="technical">Technical Skills</option>
-                <!-- Add more skills as needed -->
+            <label for="skills" class="form-label">Skills</label>
+            <select class="form-control" id="skills" name="skills[]" multiple>
+                <option value="Programming" {% if "Programming" in skills %}selected{% endif %}>Programming</option>
+                <option value="Data Analysis" {% if "Data Analysis" in skills %}selected{% endif %}>Data Analysis</option>
+                <option value="Project Management" {% if "Project Management" in skills %}selected{% endif %}>Project Management</option>
+                <option value="Graphic Design" {% if "Graphic Design" in skills %}selected{% endif %}>Graphic Design</option>
+                <option value="Digital Marketing" {% if "Digital Marketing" in skills %}selected{% endif %}>Digital Marketing</option>
+                <option value="Sales" {% if "Sales" in skills %}selected{% endif %}>Sales</option>
+                <option value="Customer Service" {% if "Customer Service" in skills %}selected{% endif %}>Customer Service</option>
+                <option value="Content Writing" {% if "Content Writing" in skills %}selected{% endif %}>Content Writing</option>
+                <option value="Public Speaking" {% if "Public Speaking" in skills %}selected{% endif %}>Public Speaking</option>
+                <option value="Problem Solving" {% if "Problem Solving" in skills %}selected{% endif %}>Problem Solving</option>
             </select>
-            <small class="form-text text-muted">Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
+        <small class="form-text text-muted">Hold down the Ctrl (Windows) or Command (Mac) key to select multiple options.</small>
         </div>
         <div class="mb-3">
-            <label for="applicant_experience" class="form-label">Job Experience</label>
-            <textarea class="form-control" id="applicant_experience" name="applicant_experience" rows="4" placeholder="Describe your job experience..." required></textarea>
+            <label for="bio" class="form-label">Bio</label>
+            <textarea class="form-control" id="bio" name="bio" rows="4" required>{{ user_profile.bio }}</textarea>
         </div>
         <div class="mb-3">
-            <label for="applicant_resume" class="form-label">Upload Resume</label>
-            <input type="file" class="form-control" id="applicant_resume" name="applicant_resume" required>
+            <label for="languages" class="form-label">Languages</label>
+            <div id="language-section">
+                {% for language_proficiency in language_proficiencies %}
+                <div class="language-entry mb-3">
+                    <select class="form-control mb-2" name="languages[]">
+                        <option value="" disabled>Select a language</option>
+                        <option value="English" {% if language_proficiency.language == "English" %}selected{% endif %}>English</option>
+                        <option value="Mandarin" {% if language_proficiency.language == "Mandarin" %}selected{% endif %}>Mandarin</option>
+                        <option value="Malay" {% if language_proficiency.language == "Malay" %}selected{% endif %}>Malay</option>
+                        <option value="Tamil" {% if language_proficiency.language == "Tamil" %}selected{% endif %}>Tamil</option>
+                        <option value="Spanish" {% if language_proficiency.language == "Spanish" %}selected{% endif %}>Spanish</option>
+                        <option value="French" {% if language_proficiency.language == "French" %}selected{% endif %}>French</option>
+                        <option value="German" {% if language_proficiency.language == "German" %}selected{% endif %}>German</option>
+                        <option value="Japanese" {% if language_proficiency.language == "Japanese" %}selected{% endif %}>Japanese</option>
+                        <option value="Korean" {% if language_proficiency.language == "Korean" %}selected{% endif %}>Korean</option>
+                        <option value="Arabic" {% if language_proficiency.language == "Arabic" %}selected{% endif %}>Arabic</option>
+                    </select>
+                    <select class="form-control" name="proficiencies[]">
+                        <option value="" disabled>Select proficiency</option>
+                        <option value="Beginner" {% if language_proficiency.proficiency == "Beginner" %}selected{% endif %}>Beginner</option>
+                        <option value="Intermediate" {% if language_proficiency.proficiency == "Intermediate" %}selected{% endif %}>Intermediate</option>
+                        <option value="Advanced" {% if language_proficiency.proficiency == "Advanced" %}selected{% endif %}>Advanced</option>
+                        <option value="Native" {% if language_proficiency.proficiency == "Native" %}selected{% endif %}>Native</option>
+                    </select>
+                    <button type="button" class="btn btn-danger btn-sm remove-language">Remove</button>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="add-language">Add Language</button>    
+        </div>
+        <div class="mb-3">
+            <label for="job_experience" class="form-label">Job Experience</label>
+            <h4 class="mb-3">Past Job Experience</h4>
+            {% for job in job_experiences %}
+            <div class="job-experience mb-3">
+                <div class="mb-3">
+                    <label for="job_title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" name="job_title[]" placeholder="Enter your job title" value="{{ job.job_title }}">
+                </div>
+                <div class="mb-3">
+                    <label for="company_name" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" name="company_name[]" placeholder="Enter your company name" value="{{ job.company_name }}">
+                </div>
+                <div class="mb-3">
+                    <label for="date_started" class="form-label">Date Started</label>
+                    <input type="date" class="form-control" name="date_started[]" value="{{ job.date_started|date:'Y-m-d' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="date_ended" class="form-label">Date Ended</label>
+                    <input type="date" class="form-control" name="date_ended[]" value="{{ job.date_ended|date:'Y-m-d' }}">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm remove-job-experience">Remove</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" id="add-job-experience">Add Past Job Experience</button>
+        <div class="mb-3">
+            <label for="resume" class="form-label">Upload Resume</label>
+            <input type="file" class="form-control" id="resume" name="resume" required>
         </div>
         <button type="submit" class="btn btn-success">Submit Application</button>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const languageSection = document.getElementById('language-section');
+        const addLanguageButton = document.getElementById('add-language');
+
+        addLanguageButton.addEventListener('click', function () {
+            const languageEntry = document.createElement('div');
+            languageEntry.classList.add('language-entry', 'mb-3');
+            languageEntry.innerHTML = `
+                <select class="form-control mb-2" name="languages[]">
+                    <option value="" disabled selected>Select a language</option>
+                    <option value="English">English</option>
+                    <option value="Mandarin">Mandarin</option>
+                    <option value="Malay">Malay</option>
+                    <option value="Tamil">Tamil</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="French">French</option>
+                    <option value="German">German</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Korean">Korean</option>
+                    <option value="Arabic">Arabic</option>
+                </select>
+                <select class="form-control mb-2" name="proficiencies[]">
+                    <option value="" disabled selected>Select proficiency</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                    <option value="Native">Native</option>
+                </select>
+                <button type="button" class="btn btn-danger btn-sm remove-language">Remove</button>
+            `;
+            languageSection.appendChild(languageEntry);
+
+            const removeButton = languageEntry.querySelector('.remove-language');
+            removeButton.addEventListener('click', function () {
+                languageEntry.remove();
+            });
+        });
+
+        languageSection.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-language')) {
+                event.target.closest('.language-entry').remove();
+            }
+        });
+
+        const jobExperienceSection = document.querySelector('#add-job-experience').parentElement;
+        const addJobExperienceButton = document.getElementById('add-job-experience');
+
+        addJobExperienceButton.addEventListener('click', function () {
+            const jobExperienceEntry = document.createElement('div');
+            jobExperienceEntry.classList.add('job-experience', 'mb-3');
+            jobExperienceEntry.innerHTML = `
+                <div class="mb-3">
+                    <label for="job_title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" name="job_title[]" placeholder="Enter your job title">
+                </div>
+                <div class="mb-3">
+                    <label for="company_name" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" name="company_name[]" placeholder="Enter your company name">
+                </div>
+                <div class="mb-3">
+                    <label for="date_started" class="form-label">Date Started</label>
+                    <input type="date" class="form-control" name="date_started[]">
+                </div>
+                <div class="mb-3">
+                    <label for="date_ended" class="form-label">Date Ended</label>
+                    <input type="date" class="form-control" name="date_ended[]">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm remove-job-experience">Remove</button>
+            `;
+            jobExperienceSection.insertBefore(jobExperienceEntry, addJobExperienceButton);
+
+            const removeButton = jobExperienceEntry.querySelector('.remove-job-experience');
+            removeButton.addEventListener('click', function () {
+                jobExperienceEntry.remove();
+            });
+        });
+
+        jobExperienceSection.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-job-experience')) {
+                event.target.closest('.job-experience').remove();
+            }
+        });
+    });
+</script>
 {% include 'myjobs/footer.html' %}

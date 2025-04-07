@@ -13,7 +13,26 @@
         </div>
         <div class="mb-3">
             <label for="job_location" class="form-label">Location:</label>
-            <input type="text" id="job_location" name="job_location" class="form-control" value="{{ job.location }}" required>
+            <select id="job_location" name="job_location" class="form-select" required>
+                <option value="" disabled>Select Job Location</option>
+                <option value="Kuala Lumpur" {% if job.location == "Kuala Lumpur" %}selected{% endif %}>Kuala Lumpur</option>
+                <option value="George Town" {% if job.location == "George Town" %}selected{% endif %}>George Town</option>
+                <option value="Ipoh" {% if job.location == "Ipoh" %}selected{% endif %}>Ipoh</option>
+                <option value="Shah Alam" {% if job.location == "Shah Alam" %}selected{% endif %}>Shah Alam</option>
+                <option value="Petaling Jaya" {% if job.location == "Petaling Jaya" %}selected{% endif %}>Petaling Jaya</option>
+                <option value="Johor Bahru" {% if job.location == "Johor Bahru" %}selected{% endif %}>Johor Bahru</option>
+                <option value="Malacca City" {% if job.location == "Malacca City" %}selected{% endif %}>Malacca City</option>
+                <option value="Alor Setar" {% if job.location == "Alor Setar" %}selected{% endif %}>Alor Setar</option>
+                <option value="Kota Bharu" {% if job.location == "Kota Bharu" %}selected{% endif %}>Kota Bharu</option>
+                <option value="Kuala Terengganu" {% if job.location == "Kuala Terengganu" %}selected{% endif %}>Kuala Terengganu</option>
+                <option value="Kuantan" {% if job.location == "Kuantan" %}selected{% endif %}>Kuantan</option>
+                <option value="Seremban" {% if job.location == "Seremban" %}selected{% endif %}>Seremban</option>
+                <option value="Kuching" {% if job.location == "Kuching" %}selected{% endif %}>Kuching</option>
+                <option value="Miri" {% if job.location == "Miri" %}selected{% endif %}>Miri</option>
+                <option value="Kota Kinabalu" {% if job.location == "Kota Kinabalu" %}selected{% endif %}>Kota Kinabalu</option>
+                <option value="Sandakan" {% if job.location == "Sandakan" %}selected{% endif %}>Sandakan</option>
+                <option value="Tawau" {% if job.location == "Tawau" %}selected{% endif %}>Tawau</option>
+            </select>
         </div>
         <div class="mb-3">
             <label for="job_salary" class="form-label">Salary:</label>
@@ -28,8 +47,8 @@
             <select id="required_education" name="required_education" class="form-select" required>
                 <option value="" disabled selected>Select education level</option>
                 <option value="High School" {% if job.required_education == "High School" %}selected{% endif %}>High School</option>
-                <option value="Bachelors" {% if job.required_education == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                <option value="Masters" {% if job.required_education == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                <option value="Bachelors" {% if job.required_education == "Bachelors" %}selected{% endif %}>Bachelor's Degree</option>
+                <option value="Masters" {% if job.required_education == "Master" %}selected{% endif %}>Master's Degree</option>
                 <option value="Doctorate" {% if job.required_education == "Doctorate" %}selected{% endif %}>Doctorate</option>
             </select>
         </div>

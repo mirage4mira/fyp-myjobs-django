@@ -49,6 +49,27 @@
         
         <div id="job-experience-section">
             <h4 class="mb-3">Past Job Experience</h4>
+            {% if not job_experiences %}
+            <div class="job-experience mb-3">
+                <div class="mb-3">
+                    <label for="job_title" class="form-label">Job Title</label>
+                    <input type="text" class="form-control" name="job_title[]" placeholder="Enter your job title">
+                </div>
+                <div class="mb-3">
+                    <label for="company_name" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" name="company_name[]" placeholder="Enter your company name">
+                </div>
+                <div class="mb-3">
+                    <label for="date_started" class="form-label">Date Started</label>
+                    <input type="date" class="form-control" name="date_started[]">
+                </div>
+                <div class="mb-3">
+                    <label for="date_ended" class="form-label">Date Ended</label>
+                    <input type="date" class="form-control" name="date_ended[]">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm remove-job-experience">Remove</button>
+            </div>
+            {% endif %}
             {% for job in job_experiences %}
             <div class="job-experience mb-3">
                 <div class="mb-3">
@@ -93,9 +114,9 @@
             <label for="education" class="form-label">Education</label>
             <select class="form-control" id="education" name="education" required>
                 <option value="" disabled>Select your education level</option>
-                <option value="High School" {% if user_profile.education == "High School Diploma" %}selected{% endif %}>High School Diploma</option>
-                <option value="Bachelors" {% if user_profile.education == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
-                <option value="Masters" {% if user_profile.education == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                <option value="High School" {% if user_profile.education == "High School" %}selected{% endif %}>High School</option>
+                <option value="Bachelors" {% if user_profile.education == "Bachelors" %}selected{% endif %}>Bachelor's Degree</option>
+                <option value="Masters" {% if user_profile.education == "Masters" %}selected{% endif %}>Master's Degree</option>
                 <option value="Doctorate" {% if user_profile.education == "Doctorate" %}selected{% endif %}>Doctorate</option>
             </select>
         </div>
@@ -122,6 +143,31 @@
         <div class="mb-3">
             <label for="language" class="form-label">Language</label>
             <div id="language-section">
+                {% if not language_proficiencies %}
+                <div class="language-entry mb-3">
+                    <select class="form-control mb-2" name="languages[]">
+                        <option value="" disabled selected>Select a language</option>
+                        <option value="English">English</option>
+                        <option value="Mandarin">Mandarin</option>
+                        <option value="Malay">Malay</option>
+                        <option value="Tamil">Tamil</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Korean">Korean</option>
+                        <option value="Arabic">Arabic</option>
+                    </select>
+                    <select class="form-control" name="proficiencies[]">
+                        <option value="" disabled selected>Select proficiency</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Native">Native</option>
+                    </select>
+                    <button type="button" class="btn btn-danger btn-sm remove-language">Remove</button>
+                </div>
+                {% endif %}
                 {% for language_proficiency in language_proficiencies %}
                 <div class="language-entry mb-3">
                     <select class="form-control mb-2" name="languages[]">
@@ -164,19 +210,14 @@
         const jobExperienceSection = document.getElementById('job-experience-section');
         const newJobExperience = document.querySelector('.job-experience').cloneNode(true);
         newJobExperience.querySelectorAll('input').forEach(input => input.value = '');
-        jobExperienceSection.appendChild(newJobExperience);
-    });
-
-    document.addEventListener('click', function (e) {
-        if (e.target && e.target.classList.contains('remove-job-experience')) {
-            const jobExperienceSection = document.getElementById('job-experience-section');
-            const jobExperiences = jobExperienceSection.querySelectorAll('.job-experience');
-            if (jobExperiences.length > 1) {
-                e.target.closest('.job-experience').remove();
+        newJobExperience.querySelector('.remove-job-experience').addEventListener('click', function () {
+            if (jobExperienceSection.querySelectorAll('.job-experience').length > 1) {
+                newJobExperience.remove();
             } else {
                 alert('At least one past job experience must be present.');
             }
-        }
+        });
+        jobExperienceSection.appendChild(newJobExperience);
     });
 
     document.getElementById('add-language').addEventListener('click', function () {
@@ -184,16 +225,27 @@
         const newLanguageEntry = document.querySelector('.language-entry').cloneNode(true);
         newLanguageEntry.querySelectorAll('select').forEach(select => select.value = '');
         newLanguageEntry.querySelector('.remove-language').addEventListener('click', function () {
-            newLanguageEntry.remove();
+            if (languageSection.querySelectorAll('.language-entry').length > 1) {
+                newLanguageEntry.remove();
+            } else {
+                alert('At least one language must be present.');
+            }
         });
         languageSection.appendChild(newLanguageEntry);
     });
 
     document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-job-experience')) {
+            const jobExperienceSection = document.getElementById('job-experience-section');
+            if (jobExperienceSection.querySelectorAll('.job-experience').length > 1) {
+                e.target.closest('.job-experience').remove();
+            } else {
+                alert('At least one past job experience must be present.');
+            }
+        }
         if (e.target && e.target.classList.contains('remove-language')) {
             const languageSection = document.getElementById('language-section');
-            const languageEntries = languageSection.querySelectorAll('.language-entry');
-            if (languageEntries.length > 1) {
+            if (languageSection.querySelectorAll('.language-entry').length > 1) {
                 e.target.closest('.language-entry').remove();
             } else {
                 alert('At least one language must be present.');
