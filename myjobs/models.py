@@ -104,6 +104,17 @@ class JobApplication(models.Model):
         null=True,
         blank=True
     )  # Applicant's education level
+    status = models.CharField(
+        max_length=15,
+        choices=[
+            ('pending', 'Pending'),
+            ('contacted', 'Contacted'),
+            ('interviewed', 'Interviewed'),
+            ('confirmed', 'Confirmed'),
+            ('rejected', 'Rejected')
+        ],
+        default='pending'
+    )  # Application status
     bio = models.TextField(null=True, blank=True)  # Applicant's bio
     resume = models.FileField(upload_to='resumes/', blank=True, null=True)  # Resume upload
     email = models.EmailField(max_length=255,null=True)  # Applicant's email address
@@ -111,12 +122,8 @@ class JobApplication(models.Model):
     def __str__(self):
         return f"Application by {self.user.username} for {self.job.title}"
 
-
 class ApplicantSkill(models.Model):
-    # job_application = models.ForeignKey(JobApplication, on_delete=models.CASCADE, related_name='applicant_skills')  # Link to JobApplication
-    # skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='applicant_skills')  # Link to Skill
     job_application = models.ForeignKey(JobApplication, on_delete=models.CASCADE, related_name='applicant_skills',null=True)  # Link to JobApplication
-  
     name = models.CharField(max_length=100, unique=False) 
     def __str__(self):
         return f"{self.skill.name} for {self.job_application}"

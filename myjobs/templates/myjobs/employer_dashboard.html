@@ -86,7 +86,9 @@
                     {% for job in jobs %}
                     <tr>
                         <td>{{ job.title }}</td>
-                        <td>{{ job.application_count }}</td>
+                        <td>
+                            <a href="/employer/job/{{ job.id }}/application">{{ job.application_count }}</a>
+                        </td>
                         <td>
                             <a href="/employer/job/{{ job.id }}/edit" class="btn btn-sm btn-primary">Edit</a>
                             <form method="POST" action="/employer/job/{{ job.id }}/delete/" style="display: inline;">

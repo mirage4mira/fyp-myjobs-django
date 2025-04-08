@@ -11,6 +11,7 @@ from .models import UserProfile, Skill, JobExperience, PreferredJobClassificatio
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 def index(request):
     return render(request, 'myjobs/home.html')
@@ -50,6 +51,10 @@ def register(request):
     return render(request, 'myjobs/register.html')
 
 def setup(request):
+    if not request.user.is_authenticated:
+        messages.warning(request, 'You need to sign in to set up your profile.')
+        request.session['next'] = 'setup_profile'  # Store the next URL in session
+        return redirect('signin')  # Redirect to sign-in page if no user is logged in
     try:
         user_profile = UserProfile.objects.get(user=request.user)
         return redirect('edit_profile')  # Redirect to edit profile if user profile exists
@@ -264,6 +269,10 @@ def jobs(request):
     return render(request, 'myjobs/jobs.html', {'jobs': jobs_page, 'search': search_keyword})
 
 def employer_setup(request):
+    if not request.user.is_authenticated:
+        messages.warning(request, 'You need to sign in to set up your employer profile.')
+        request.session['next'] = 'employer_setup_profile'
+        return redirect('signin')  # Redirect to sign-in page if no user is logged in
     if request.method == 'POST':
         company_name = request.POST.get('company_name')
         company_address = request.POST.get('company_address')
@@ -386,8 +395,41 @@ def trace_application(request, job_id):
         messages.error(request, 'Job not found or you do not have permission to view applications.')
         return redirect('employer_dashboard')
 
-    applications = job.application_set.all()  # Assuming a related name `application_set` exists for applications
-    return render(request, 'myjobs/trace_application.html', {'job': job, 'applications': applications})
+    applications = JobApplication.objects.filter(job=job)
+    status_choices = JobApplication._meta.get_field('status').choices  # Correctly retrieve status choices
+    return render(request, 'myjobs/trace_application.html', {'job': job, 'applications': applications, 'status_choices': status_choices})
+
+def delete_application(request, job_id, application_id):
+    if not request.user.is_authenticated:
+        messages.warning(request, 'You need to sign in to delete applications.')
+        return redirect('signin')
+
+    try:
+        application = JobApplication.objects.get(id=application_id, job__id=job_id, job__company__user=request.user)  # Ensure the application belongs to the logged-in employer
+        application.delete()
+        messages.success(request, 'Application deleted successfully!')
+    except JobApplication.DoesNotExist:
+        messages.error(request, 'Application not found or you do not have permission to delete this application.')
+    return redirect('employer_trace_application', job_id=job_id)  # Include job_id in the redirect
+
+def view_application(request, job_id, application_id):
+    if not request.user.is_authenticated:
+        messages.warning(request, 'You need to sign in to view applications.')
+        return redirect('signin')
+
+    try:
+        application = JobApplication.objects.get(id=application_id, job__id=job_id, job__company__user=request.user)  # Ensure the application belongs to the logged-in employer
+    except JobApplication.DoesNotExist:
+        messages.error(request, 'Application not found or you do not have permission to view this application.')
+        return redirect('employer_dashboard')
+
+    return render(request, 'myjobs/view_application.html', {'application': application})
+
+@login_required
+def view_applications(request, job_id):
+    # Logic to fetch and display applications for the given job_id
+    applications = []  # Replace with actual query to fetch applications
+    return render(request, 'employer/view_applications.html', {'applications': applications, 'job_id': job_id})
 
 def apply_job(request, job_id):
 
@@ -421,8 +463,8 @@ def apply_job(request, job_id):
 
         # Check if the user has already applied for the job
 
-        # Save the uploaded resume file
-        fs = FileSystemStorage()
+        # Save the uploaded resume file to the 'resumes' folder
+        fs = FileSystemStorage(location='resumes')
         resume_filename = fs.save(applicant_resume.name, applicant_resume)  # Use the file's name
 
         # Save application details
@@ -510,3 +552,15 @@ def apply_job(request, job_id):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+def change_application_status(request,job_id, application_id):
+    if request.method == 'POST':
+        application = get_object_or_404(JobApplication, id=application_id)
+        new_status = request.POST.get('status')
+        if new_status in dict(JobApplication._meta.get_field('status').choices):
+            application.status = new_status
+            application.save()
+            messages.success(request, 'Application status updated successfully.')
+        else:
+            messages.error(request, 'Invalid status selected.')
+    return redirect(request.META.get('HTTP_REFERER', 'myjobs:trace_application'))
