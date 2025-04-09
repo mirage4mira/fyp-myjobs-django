@@ -1,7 +1,7 @@
 {% include 'myjobs/header.html' %}
 <div class="container" style="margin-top: 20px; margin-bottom: 20px;">
     <!-- Job Search Bar -->
-    <form class="mb-4 w-50 mx-auto" method="GET" action="{% url 'job' %}">
+    <form class="mb-4 w-50 mx-auto" method="GET" action="{% url 'jobs' %}">
         <div class="input-group">
             <input type="text" class="form-control" name="search" placeholder="Search for jobs..." aria-label="Search for jobs" value="{{search}}">
             <button class="btn btn-outline-secondary" type="submit">Search</button>

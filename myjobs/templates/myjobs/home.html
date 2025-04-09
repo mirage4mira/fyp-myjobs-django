@@ -3,7 +3,7 @@
 <div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px - 40px);">
     <div class="justify-content-center w-50">
         <h2 class="text-center mb-4">Search Job</h2>
-        <form action="{% url 'job' %}" method="get" class="input-group" style="max-width: 800px; width: 100%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <form action="{% url 'jobs' %}" method="get" class="input-group" style="max-width: 800px; width: 100%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             <input type="text" name="search" class="form-control form-control-lg" placeholder="Job title, keyword, company or anything" aria-label="Job title, keyword, company, or anything" style="padding-right: 10px; font-size: 1.25rem; height: 3.5rem;">
             <button class="btn btn-primary btn-lg" type="submit">Search</button>
         </form>

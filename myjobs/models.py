@@ -1,5 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now  # Import for auto date field
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from datetime import datetime, date
 
 class Skill(models.Model):
     user_profile = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='skills',null=True)
@@ -87,7 +91,7 @@ class Job(models.Model):
         choices=[('full_time', 'Full-Time'), ('part_time', 'Part-Time')],
         default='full_time'
     )
-
+    date_created_or_renewed = models.DateField(default=now)  # Updated field to represent creation or renewal date
     def __str__(self):
         return self.title
 

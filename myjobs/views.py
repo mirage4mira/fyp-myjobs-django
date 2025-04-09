@@ -12,6 +12,10 @@ from django.core.files.storage import FileSystemStorage
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from django.utils.dateformat import format
+from datetime import datetime, date
 
 def index(request):
     return render(request, 'myjobs/home.html')
@@ -44,7 +48,11 @@ def register(request):
             user = User.objects.create_user(username=username, email=email, password=password)
             user.save()
             messages.success(request, 'Registration successful!')
-            return redirect('signin')
+            
+            # Store username and password in session for one-time use
+            request.session['temp_username'] = username
+            request.session['temp_password'] = password
+            return redirect('signin')  # Redirect to the sign-in page after successful registration
         except Exception as e:
             messages.error(request, 'Error: ' + str(e))
             return redirect('register')
@@ -246,6 +254,8 @@ def jobs(request):
         jobs = list(jobs_title) + list(jobs_description) + list(jobs_location) + list(jobs_company)
     else:
         jobs = Job.objects.select_related('company').all()  # Fetch all jobs with related company details
+
+    jobs = [job for job in jobs if (date.today() - job.date_created_or_renewed).days <= 30]
     
     jobs_with_company = []
     for job in jobs:
@@ -316,8 +326,20 @@ def employer_dashboard(request):
     # Fetch jobs posted by the employer
     jobs = Job.objects.filter(company=employer)
     # Count the number of applications for each job
+
     for job in jobs:
         job.application_count = JobApplication.objects.filter(job=job).count()
+        # Ensure both are aware datetime objects
+        if isinstance(job.date_created_or_renewed, date) and not isinstance(job.date_created_or_renewed, datetime):
+            job_created_datetime = datetime.combine(job.date_created_or_renewed, datetime.min.time())
+        else:
+            job_created_datetime = job.date_created_or_renewed
+
+        if timezone.is_naive(job_created_datetime):
+            job_created_datetime = make_aware(job_created_datetime)
+
+        job.number_of_days_since_posted = (timezone.now() - job_created_datetime).days
+        job.listing_days_allowed = 30  - job.number_of_days_since_posted
     return render(request, 'myjobs/employer_dashboard.html', {'employer': employer, 'jobs': jobs})
 
 @csrf_protect
@@ -384,6 +406,19 @@ def delete_job(request, job_id):
         messages.error(request, 'Job not found or you do not have permission to delete this job.')
     return redirect('employer_dashboard')  # Add trailing slash
 
+@require_POST
+def renew_job(request, job_id):
+    try:
+        job = Job.objects.get(id=job_id, company__user=request.user)  # Ensure the job belongs to the logged-in employer
+    except Job.DoesNotExist:
+        messages.error(request, 'Job not found or you do not have permission to renew this job.')
+        return redirect('employer_dashboard')
+
+    job.date_created_or_renewed = timezone.now()  # Update the renewal date to the current time
+    job.save()
+    messages.success(request, 'Job renewed successfully!')
+    return redirect('employer_dashboard')
+    
 def trace_application(request, job_id):
     if not request.user.is_authenticated:
         messages.warning(request, 'You need to sign in to trace applications.')
