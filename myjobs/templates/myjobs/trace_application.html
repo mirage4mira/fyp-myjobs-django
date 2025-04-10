@@ -1,6 +1,41 @@
 {% include 'myjobs/header.html' %}
 <div class="container mt-4 mb-5">
 <h2>Applications for {{ job.title }}</h2>
+
+<!-- Filters Section -->
+<form method="get" class="row mb-4">
+    <div class="col-md-3">
+        <label for="location" class="form-label">Location</label>
+        <select id="location" name="location" class="form-select">
+            <option value="">All Locations</option>
+            {% for loc in home_location_choices %}
+            <option value="{{ loc }}" {% if request.GET.location == loc %}selected{% endif %}>{{ loc }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="skill" class="form-label">Skills</label>
+        
+        <select id="skill" name="skill" class="form-select">
+            <option value="">All Skills</option>
+            {% for skill in skill_choices %}
+            <option value="{{ skill }}" 
+                {% if skill in request.GET.skill %}selected{% endif %}>
+                {{ skill }}
+            </option>
+            {% endfor %}
+        </select>
+        <!-- 'getlist' retrieves a list of selected values for the 'skills' field -->
+    </div>
+    <div class="col-md-3">
+        <label for="experience" class="form-label">Experience (years)</label>
+        <input type="number" id="experience" name="experience" class="form-control" value="{{ request.GET.experience }}" placeholder="Enter years of experience">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+</form>
+
 <table class="table table-striped table-bordered">
     <thead>
         <tr>

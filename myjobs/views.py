@@ -17,6 +17,14 @@ from django.utils.timezone import make_aware
 from django.utils.dateformat import format
 from datetime import datetime, date
 
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.feature_extraction.text import TfidfVectorizer
+except ImportError:
+    cosine_similarity = None
+    TfidfVectorizer = None
+    # Log an error or raise an exception if necessary
+
 def index(request):
     return render(request, 'myjobs/home.html')
 
@@ -256,7 +264,39 @@ def jobs(request):
         jobs = Job.objects.select_related('company').all()  # Fetch all jobs with related company details
 
     jobs = [job for job in jobs if (date.today() - job.date_created_or_renewed).days <= 30]
-    
+
+    # Prioritize jobs for logged-in users with a user profile
+    if request.user.is_authenticated:
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            user_skills = " ".join([skill.name for skill in user_profile.skills.all()])
+            user_preferred_jobs = " ".join([job.job_classification for job in PreferredJobClassification.objects.filter(user_profile=user_profile)])
+            user_home_location = user_profile.home_location or ""  # Include home location
+            user_job_experience_titles = " ".join([experience.job_title for experience in JobExperience.objects.filter(user_profile=user_profile)])  # Include job titles
+
+            # Combine user preferences into a single string
+            user_profile_text = f"{user_skills} {user_preferred_jobs} {user_home_location} {user_job_experience_titles}"
+
+            # Prepare job descriptions for similarity comparison
+            job_texts = [f"{job.title} {job.description} {job.location}" for job in jobs]
+
+            # Use TF-IDF and cosine similarity to rank jobs
+            if TfidfVectorizer and cosine_similarity:
+                vectorizer = TfidfVectorizer()
+                tfidf_matrix = vectorizer.fit_transform([user_profile_text] + job_texts)
+                similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+
+                # Add ranking points to jobs
+                for job, score in zip(jobs, similarity_scores):
+                    job.ranking_point = score
+
+                # Sort jobs by similarity scores
+                jobs = [job for _, job in sorted(zip(similarity_scores, jobs), key=lambda pair: pair[0], reverse=True)]
+            else:
+                messages.error(request, "Job prioritization is unavailable due to missing dependencies.")
+        except UserProfile.DoesNotExist:
+            pass  # If no user profile exists, proceed without prioritization
+
     jobs_with_company = []
     for job in jobs:
         encoded_image = None
@@ -268,9 +308,10 @@ def jobs(request):
             'job': job,
             'company_name': job.company.company_name,
             'company_logo': job.company.company_logo if job.company.company_logo else None,
-            'encoded_image': encoded_image  # Include encoded image
+            'encoded_image': encoded_image,  # Include encoded image
+            'ranking_point': getattr(job, 'ranking_point', None)  # Include ranking point if available
         })
-    
+
     # Pagination
     paginator = Paginator(jobs_with_company, 15)  # Show 15 jobs per page
     page_number = request.GET.get('page')
@@ -430,9 +471,33 @@ def trace_application(request, job_id):
         messages.error(request, 'Job not found or you do not have permission to view applications.')
         return redirect('employer_dashboard')
 
+    # Get filter parameters from the GET request
+    location_filter = request.GET.get('location', '')
+    skill_filter = request.GET.getlist('skills', [])
+    experience_filter = request.GET.get('experience', '')
+
+    # Filter applications based on the provided filters
     applications = JobApplication.objects.filter(job=job)
+    applications = applications.prefetch_related('applicant_skills', 'applicant_past_job_experiences', 'applicant_language_proficiencies')
+
+    if location_filter:
+        applications = applications.filter(home_location=location_filter)
+    if skill_filter:
+        applications = applications.filter(applicant_skills__name__in=skill_filter).distinct()
+    if experience_filter:
+        applications = applications.filter(applicant_past_job_experiences__date_started__lte=timezone.now() - timezone.timedelta(days=int(experience_filter) * 365)).distinct()
+
     status_choices = JobApplication._meta.get_field('status').choices  # Correctly retrieve status choices
-    return render(request, 'myjobs/trace_application.html', {'job': job, 'applications': applications, 'status_choices': status_choices})
+    home_location_choices = [choice[0] for choice in UserProfile._meta.get_field('home_location').choices]
+    skill_choices = [choice[0] for choice in Skill._meta.get_field('name').choices] if Skill._meta.get_field('name').choices else []
+
+    return render(request, 'myjobs/trace_application.html', {
+        'job': job,
+        'applications': applications,
+        'status_choices': status_choices,
+        'home_location_choices': home_location_choices,
+        'skill_choices': skill_choices
+    })
 
 def delete_application(request, job_id, application_id):
     if not request.user.is_authenticated:
