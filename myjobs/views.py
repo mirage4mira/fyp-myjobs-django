@@ -281,19 +281,22 @@ def jobs(request):
             job_texts = [f"{job.title} {job.description} {job.location}" for job in jobs]
 
             # Use TF-IDF and cosine similarity to rank jobs
-            if TfidfVectorizer and cosine_similarity:
+            if TfidfVectorizer and cosine_similarity and job_texts:
                 vectorizer = TfidfVectorizer()
                 tfidf_matrix = vectorizer.fit_transform([user_profile_text] + job_texts)
-                similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+                if tfidf_matrix.shape[0] > 1:  # Ensure there are at least two samples
+                    similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
 
-                # Add ranking points to jobs
-                for job, score in zip(jobs, similarity_scores):
-                    job.ranking_point = score
+                    # Add ranking points to jobs
+                    for job, score in zip(jobs, similarity_scores):
+                        job.ranking_point = score
 
-                # Sort jobs by similarity scores
-                jobs = [job for _, job in sorted(zip(similarity_scores, jobs), key=lambda pair: pair[0], reverse=True)]
+                    # Sort jobs by similarity scores
+                    jobs = [job for _, job in sorted(zip(similarity_scores, jobs), key=lambda pair: pair[0], reverse=True)]
+                else:
+                    messages.warning(request, "Not enough data for job prioritization.")
             else:
-                messages.error(request, "Job prioritization is unavailable due to missing dependencies.")
+                messages.warning(request, "Job prioritization is unavailable due to missing data or dependencies.")
         except UserProfile.DoesNotExist:
             pass  # If no user profile exists, proceed without prioritization
 
@@ -367,7 +370,7 @@ def employer_dashboard(request):
     # Fetch jobs posted by the employer
     jobs = Job.objects.filter(company=employer)
     # Count the number of applications for each job
-
+    job_classification_choices = []
     for job in jobs:
         job.application_count = JobApplication.objects.filter(job=job).count()
         # Ensure both are aware datetime objects
@@ -381,7 +384,10 @@ def employer_dashboard(request):
 
         job.number_of_days_since_posted = (timezone.now() - job_created_datetime).days
         job.listing_days_allowed = 30  - job.number_of_days_since_posted
-    return render(request, 'myjobs/employer_dashboard.html', {'employer': employer, 'jobs': jobs})
+
+    job_classification_choices = PreferredJobClassification._meta.get_field('job_classification').choices
+    job_classification_choices = [choice[0] for choice in job_classification_choices]
+    return render(request, 'myjobs/employer_dashboard.html', {'employer': employer, 'jobs': jobs,'job_classification_choices':job_classification_choices})
 
 @csrf_protect
 def create_job(request):
@@ -390,9 +396,11 @@ def create_job(request):
         job_description = request.POST.get('job_description')
         job_location = request.POST.get('job_location')
         job_salary = request.POST.get('job_salary')
+        job_category = request.POST.get('job_category')
         number_of_candidates = request.POST.get('number_of_candidates')
         required_education = request.POST.get('required_education')
         required_experience_years = request.POST.get('required_experience_years')
+
         
         # Get the company ID from the logged-in user's employer profile
         try:
@@ -410,7 +418,8 @@ def create_job(request):
             number_of_candidates=number_of_candidates,
             required_education=required_education,
             required_experience_years=required_experience_years,
-            company_id=company_id  # Insert company ID
+            company_id=company_id,  # Insert company ID
+            job_category=job_category,  # Insert job category
         )
         return redirect('employer_dashboard')  # Add trailing slash
     return render(request, 'myjobs/employer_dashboard.html')
@@ -485,7 +494,58 @@ def trace_application(request, job_id):
     if skill_filter:
         applications = applications.filter(applicant_skills__name__in=skill_filter).distinct()
     if experience_filter:
-        applications = applications.filter(applicant_past_job_experiences__date_started__lte=timezone.now() - timezone.timedelta(days=int(experience_filter) * 365)).distinct()
+        experience_filter_days = int(experience_filter) * 365
+        filtered_applications = []
+        for application in applications:
+            total_experience_days = 0
+            for experience in application.applicant_past_job_experiences.all():
+                if experience.date_started and experience.date_ended:
+                    total_experience_days += (experience.date_ended - experience.date_started).days
+            if total_experience_days >= experience_filter_days:
+                filtered_applications.append(application)
+        applications = filtered_applications
+
+    # AI/ML Ranking Algorithm
+    ranked_applications = []
+    for application in applications:
+        score = 0
+        location_score = 0
+        education_score = 0
+        experience_score = 0
+
+        # Match location
+        if job.location and application.home_location and job.location.lower() == application.home_location.lower():
+            location_score = 1
+            score += location_score
+
+        # Match education
+        if job.required_education and application.education and job.required_education.lower() == application.education.lower():
+            education_score = 1
+            score += education_score
+
+        # Match experience
+        total_experience_years = 0
+        for experience in application.applicant_past_job_experiences.all():
+            if experience.date_started and experience.date_ended:
+                total_experience_years += (experience.date_ended - experience.date_started).days / 365.0
+        if job.required_experience_years and total_experience_years >= job.required_experience_years:
+            experience_score = 1
+            score += experience_score
+
+        # Add ranking score and individual scores to the application
+        ranked_applications.append({
+            'application': application,
+            'total_score': score,
+            'location_score': location_score,
+            'education_score': education_score,
+            'experience_score': experience_score
+        })
+
+    # Sort applications by total score in descending order
+    ranked_applications.sort(key=lambda x: x['total_score'], reverse=True)
+
+    # Prepare applications with scores for the template
+    applications_with_scores = ranked_applications
 
     status_choices = JobApplication._meta.get_field('status').choices  # Correctly retrieve status choices
     home_location_choices = [choice[0] for choice in UserProfile._meta.get_field('home_location').choices]
@@ -493,7 +553,7 @@ def trace_application(request, job_id):
 
     return render(request, 'myjobs/trace_application.html', {
         'job': job,
-        'applications': applications,
+        'applications_with_scores': applications_with_scores,
         'status_choices': status_choices,
         'home_location_choices': home_location_choices,
         'skill_choices': skill_choices
@@ -519,11 +579,23 @@ def view_application(request, job_id, application_id):
 
     try:
         application = JobApplication.objects.get(id=application_id, job__id=job_id, job__company__user=request.user)  # Ensure the application belongs to the logged-in employer
+        applicant_skills = ApplicantSkill.objects.filter(job_application_id=application_id)
+        applicant_languages = ApplicantLanguageProficiency.objects.filter(job_application_id=application_id)
+        applicant_experiences = ApplicantPastJobExperience.objects.filter(job_application_id=application_id)
+        status_choices = JobApplication._meta.get_field('status').choices
+
+
     except JobApplication.DoesNotExist:
         messages.error(request, 'Application not found or you do not have permission to view this application.')
         return redirect('employer_dashboard')
 
-    return render(request, 'myjobs/view_application.html', {'application': application})
+    return render(request, 'myjobs/view_application.html', {
+        'application': application,
+        'applicant_skills': applicant_skills,
+        'applicant_languages': applicant_languages,
+        'applicant_experiences': applicant_experiences,
+        'status_choices': status_choices
+    })
 
 @login_required
 def view_applications(request, job_id):
@@ -619,33 +691,33 @@ def apply_job(request, job_id):
             return redirect('jobs')  # Redirect to jobs page if job does not exist
 
         user_profile = None
+        education_choices = [choice[0] for choice in UserProfile.EducationChoices.choices]  # Get education choices
         if request.user.is_authenticated:
             try:
                 user_profile = UserProfile.objects.get(user=request.user)  # Fetch the user's profile
                 # Pre-fill application form with user profile details if available
                 if user_profile:
-                    skills = Skill.objects.filter(user_profile_id = user_profile.id)
+                    skills = Skill.objects.filter(user_profile_id=user_profile.id)
                     skills = [skill.name for skill in skills]
-                    # print("User Skills:", [skill.name for skill in skills])
-                    languages = LanguageProficiency.objects.filter(user_profile_id = user_profile.id)  # Assuming a related name for language proficiency
-                    job_experiences = JobExperience.objects.filter(user_profile_id = user_profile.id)  # Fetch user's job experiences
-                    # print("Languages:", [language.language_name for language in languages])
-                    # print("Job Experiences:", [experience.description for experience in job_experiences])
+                    languages = LanguageProficiency.objects.filter(user_profile_id=user_profile.id)
+                    job_experiences = JobExperience.objects.filter(user_profile_id=user_profile.id)
                 else:
                     skills = []
                     languages = []
                     job_experiences = []
-
             except UserProfile.DoesNotExist:
-                pass  # Handle case where user profile does not exist
+                skills = []
+                languages = []
+                job_experiences = []
 
-            return render(request, 'myjobs/apply_job.html', {
-                'job': job,
-                'user_profile': user_profile,
-                'skills': skills,
-                'language_proficiencies': languages,
-                'job_experiences': job_experiences  # Pass additional details to the view
-            })
+        return render(request, 'myjobs/apply_job.html', {
+            'job': job,
+            'user_profile': user_profile,
+            'skills': skills,
+            'language_proficiencies': languages,
+            'job_experiences': job_experiences,
+            'education_choices': education_choices  # Pass education choices to the view
+        })
 
     return redirect('job')  # Redirect to jobs page if not a valid request method
 

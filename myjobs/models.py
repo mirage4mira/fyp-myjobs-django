@@ -152,6 +152,13 @@ class Job(models.Model):
         default='full_time'
     )
     date_created_or_renewed = models.DateField(default=now)  # Updated field to represent creation or renewal date
+    job_category = models.CharField(
+        max_length=255,
+        choices=PreferredJobClassification.JOB_CLASSIFICATION_CHOICES,
+        null=True,
+        blank=True
+    )  # Job category based on predefined choices
+
     def __str__(self):
         return self.title
 

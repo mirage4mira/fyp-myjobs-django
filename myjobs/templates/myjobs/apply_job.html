@@ -54,9 +54,15 @@
                 <option value="Tawau" {% if user_profile.home_location == "Tawau" %}selected{% endif %}>Tawau</option>
             </select>
         </div>
-        <div class="mb-3">
-            <label for="education" class="form-label">Education</label>
-            <input type="text" class="form-control" id="education" name="education" value="{{ user_profile.education }}" required>
+        <div class="form-group">
+            <label for="education">Education</label>
+            <select id="education" name="education" class="form-control">
+                {% for education in education_choices %}
+                <option value="{{ education }}" {% if user_profile and user_profile.education == education %}selected{% endif %}>
+                    {{ education }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
         <div class="mb-3">
             <label for="skills" class="form-label">Skills</label>

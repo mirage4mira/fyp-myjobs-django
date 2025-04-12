@@ -14,6 +14,15 @@
                     <textarea class="form-control" id="job_description" name="job_description" rows="5" required></textarea>
                 </div>
                 <div class="mb-3">
+                    <label for="job_category" class="form-label">Job Category</label>
+                    <select class="form-control" id="job_category" name="job_category" required>
+                        <option value="" disabled selected>Select Job Category</option>
+                        {% for choice in job_classification_choices %}
+                            <option value="{{ choice }}">{{ choice }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label for="job_location" class="form-label">Job Location</label>
                     <select class="form-control" id="job_location" name="job_location" required>
                         <option value="" disabled selected>Select Job Location</option>
