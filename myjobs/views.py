@@ -482,7 +482,7 @@ def trace_application(request, job_id):
 
     # Get filter parameters from the GET request
     location_filter = request.GET.get('location', '')
-    skill_filter = request.GET.getlist('skills', [])
+    skill_filter = request.GET.get('skill', '')
     experience_filter = request.GET.get('experience', '')
 
     # Filter applications based on the provided filters
@@ -492,7 +492,7 @@ def trace_application(request, job_id):
     if location_filter:
         applications = applications.filter(home_location=location_filter)
     if skill_filter:
-        applications = applications.filter(applicant_skills__name__in=skill_filter).distinct()
+        applications = applications.filter(applicant_skills__name=skill_filter).distinct()
     if experience_filter:
         experience_filter_days = int(experience_filter) * 365
         filtered_applications = []
