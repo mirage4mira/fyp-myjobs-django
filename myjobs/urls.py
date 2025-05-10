@@ -7,6 +7,7 @@ from . import views
 from .views import edit_job, trace_application, apply_job,renew_job ,delete_job, view_applications  # Import the new view
 from django.views.static import serve  # Import the serve view
 
+
 urlpatterns = [
     path('', views.index, name='home'),
     path('signin/', views.signin, name='signin'),

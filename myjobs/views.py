@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.utils.dateformat import format
 from datetime import datetime, date
+from django.urls import reverse  # Add this import for reverse function
 
 try:
     from sklearn.metrics.pairwise import cosine_similarity
@@ -725,7 +726,7 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
-def change_application_status(request,job_id, application_id):
+def change_application_status(request, job_id, application_id):
     if request.method == 'POST':
         application = get_object_or_404(JobApplication, id=application_id)
         new_status = request.POST.get('status')
@@ -735,4 +736,4 @@ def change_application_status(request,job_id, application_id):
             messages.success(request, 'Application status updated successfully.')
         else:
             messages.error(request, 'Invalid status selected.')
-    return redirect(request.META.get('HTTP_REFERER', 'myjobs:trace_application'))
+    return redirect(request.META.get('HTTP_REFERER') or reverse('employer_trace_application', args=[job_id]))  # Corrected the redirect logic to use `reverse` for fallback.
