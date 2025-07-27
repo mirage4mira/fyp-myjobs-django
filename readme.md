@@ -132,5 +132,3 @@ The Enhanced Job Posting Website is now installed and ready for use. For further
 
 ---  
 **End of Manual**  
-
-Let me know if you'd like any modifications or additional details!
